@@ -1,0 +1,67 @@
+dependencies {
+    implementation 'com.amazonaws:aws-android-sdk-core:2.22.6'
+    implementation 'com.amazonaws:aws-android-sdk-cognito:2.22.6'
+    implementation 'com.amazonaws:aws-android-sdk-cognitoidentityprovider:2.22.6'
+    // Add other dependencies as needed
+}
+
+<uses-permission android:name="android.permission.INTERNET"/>
+
+{
+    "CognitoUserPool": {
+        "Default": {
+            "PoolId": "YOUR_USER_POOL_ID",
+            "AppClientId": "YOUR_APP_CLIENT_ID",
+            "Region": "YOUR_AWS_REGION"
+        }
+    }
+}
+
+
+import android.os.Bundle;
+import androidx.appcompat.app.AppCompatActivity;
+import com.amazonaws.auth.CognitoCachingCredentialsProvider;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.cognitoidentityprovider.AWSCognitoIdentityProviderClient;
+import com.amazonaws.services.cognitoidentityprovider.model.InitiateAuthRequest;
+import com.amazonaws.services.cognitoidentityprovider.model.InitiateAuthResult;
+import com.amazonaws.services.cognitoidentityprovider.model.AuthFlowType;
+
+public class MainActivity extends AppCompatActivity {
+
+    private AWSCognitoIdentityProviderClient cognitoClient;
+    private CognitoCachingCredentialsProvider credentialsProvider;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // Initialize AWS Cognito
+        credentialsProvider = new CognitoCachingCredentialsProvider(
+                getApplicationContext(),
+                "YOUR_USER_POOL_ID", // Identity Pool ID
+                Regions.US_EAST_1 // Region
+        );
+
+        cognitoClient = new AWSCognitoIdentityProviderClient(credentialsProvider);
+
+        // Authenticate a user
+        initiateAuth("username", "password");
+    }
+
+    private void initiateAuth(String username, String password) {
+        InitiateAuthRequest authRequest = new InitiateAuthRequest()
+                .withAuthFlow(AuthFlowType.USER_PASSWORD_AUTH)
+                .addAuthParametersEntry("USERNAME", username)
+                .addAuthParametersEntry("PASSWORD", password)
+                .withClientId("YOUR_APP_CLIENT_ID");
+
+        try {
+            InitiateAuthResult authResult = cognitoClient.initiateAuth(authRequest);
+            // Handle authentication result
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
